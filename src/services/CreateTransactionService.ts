@@ -1,10 +1,44 @@
-// import AppError from '../errors/AppError';
+import AppError from '../errors/AppError';
+import { getCustomRepository, getRepository, } from 'typeorm';
+import TransactionsRepository from '../repositories/TransactionsRepository'
 
 import Transaction from '../models/Transaction';
+import category from '../models/Category';
+import Category from '../models/Category';
+
+interface Request {
+  title: string;
+  type: "income" | "outcome";
+  value: number;
+  category: string;
+}
 
 class CreateTransactionService {
-  public async execute(): Promise<Transaction> {
-    // TODO
+  public async execute({ title, value, type, category }: Request): Promise<Transaction> {
+    const transactionsRepository = getCustomRepository(TransactionsRepository);
+    const categoryRepository = getRepository(Category);
+
+    const { total } = await transactionsRepository.getBalance();
+
+    if (type === "outcome" && value > total) {
+      throw new AppError('Insufficent ammount for this operation');
+    }
+
+    let categoryObject = await categoryRepository.findOne({
+      where: { title: category }
+    })
+    if (!categoryObject) {
+      categoryObject = categoryRepository.create({
+        title: category,
+      });
+      await categoryRepository.save(categoryObject);
+    }
+
+    const transaction = await transactionsRepository.create({
+      title, value, type, category: categoryObject
+    })
+    await transactionsRepository.save(transaction);
+    return transaction;
   }
 }
 
