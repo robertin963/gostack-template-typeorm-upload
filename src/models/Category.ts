@@ -1,8 +1,16 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+
+import Transaction from '../models/Transaction';
 
 @Entity('categories')
 class Category {
-
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -14,6 +22,9 @@ class Category {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @OneToMany(() => Transaction, transaction => transaction.category)
+  transaction: Transaction;
 }
 
 export default Category;
